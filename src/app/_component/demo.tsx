@@ -49,6 +49,7 @@ export default function Demo() {
       )}
 
       {SearchMutation.isSuccess &&
+      //@ts-expect-error error
         SearchMutation.data.map((val, idx) => (
           <div key={idx}>
             <h1>Ingredient {val.ingredient}</h1>
