@@ -26,11 +26,11 @@ export interface SearchIngredientInRecipesResponse {
 }
 
 export interface ReceptorResponse {
-  _id: string,
-  id: string,
-  taste : string,
-  receptor_name : string
-  uniprot_id : string
+  _id: string;
+  id: string;
+  taste: string;
+  receptor_name: string;
+  uniprot_id: string;
 }
 
 export const getAccessToken = async () => {
