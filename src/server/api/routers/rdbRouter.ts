@@ -9,7 +9,7 @@ export const rdbRouter = createTRPCRouter({
         ingredient: z.string(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const myHeaders = new Headers();
 
       myHeaders.append("Authorization", `Bearer ${ctx.response.access_token}`);
@@ -28,7 +28,7 @@ export const rdbRouter = createTRPCRouter({
       return response;
     }),
     Receptors: rdbProcedure
-    .query(async({ctx})=>{
+    .mutation(async({ctx})=>{
 
         const myHeaders = new Headers();
         myHeaders.append("Authorization", `Bearer ${ctx.response.access_token}`);
