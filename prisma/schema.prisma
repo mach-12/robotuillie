@@ -11,11 +11,13 @@ datasource db {
     relationMode = "prisma"
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@index([name])
+model RecipeDbToken {
+    id                  String      @id @default(cuid())
+    access_token        String
+    expires_on          DateTime
+    refresh_token       String
+    rtoken_expires_on   DateTime
+    token_type          String
+    id_token            String
+    @@unique([id])
 }
