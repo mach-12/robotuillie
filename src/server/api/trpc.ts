@@ -6,10 +6,15 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-
+import {
+  getAccessToken,
+  addSecondsToCurrentTime,
+  refreshToken,
+  type AccessTokenType,
+} from "./rdbUtils";
 import { db } from "~/server/db";
 
 /**
@@ -74,3 +79,102 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+
+export const middleware = t.middleware;
+
+const rdbMiddleware = middleware(async (opts) => {
+  const { ctx } = opts;
+
+  const tokenData = await ctx.db.recipeDbToken.findFirst({
+    where: {
+      OR: [
+        { rtoken_expires_on: { gt: new Date() } },
+        { expires_on: { gt: new Date() } },
+      ],
+    },
+  });
+
+  if (!tokenData) {
+    const response = await getAccessToken();
+    if (response) {
+      await ctx.db.recipeDbToken.create({
+        data: {
+          access_token: response.access_token,
+          expires_on: addSecondsToCurrentTime(response.expires_in),
+          refresh_token: response.refresh_token,
+          rtoken_expires_on: addSecondsToCurrentTime(
+            response.refresh_expires_in,
+          ),
+          token_type: response.token_type,
+          id_token: response.id_token,
+        },
+      });
+
+      console.log(response);
+
+      return opts.next({
+        ctx: {
+          response,
+        },
+      });
+    }
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "getAcessToken from rdb backend did not work",
+    });
+  }
+
+  if (
+    tokenData.expires_on > new Date() &&
+    tokenData.rtoken_expires_on < new Date()
+  ) {
+    const response = await refreshToken(tokenData.refresh_token);
+    if (response) {
+      await ctx.db.recipeDbToken.create({
+        data: {
+          access_token: response.access_token,
+          expires_on: addSecondsToCurrentTime(response.expires_in),
+          refresh_token: response.refresh_token,
+          rtoken_expires_on: addSecondsToCurrentTime(
+            response.refresh_expires_in,
+          ),
+          token_type: response.token_type,
+          id_token: response.id_token,
+        },
+      });
+
+      console.log(response);
+
+      return opts.next({
+        ctx: {
+          response,
+        },
+      });
+    }
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "refreshAccessToken from rdb backend did not work",
+    });
+  }
+
+  const response: AccessTokenType = {
+    access_token: tokenData.access_token,
+    expires_in: 0,
+    refresh_expires_in: 0,
+    refresh_token: tokenData.refresh_token,
+    token_type: tokenData.token_type,
+    id_token: tokenData.id_token,
+    session_state: "not required",
+    scope: "not required",
+  };
+
+  console.log(response);
+
+  return opts.next({
+    ctx: {
+      response,
+    },
+  });
+});
+
+export const rdbProcedure = publicProcedure.use(rdbMiddleware);
