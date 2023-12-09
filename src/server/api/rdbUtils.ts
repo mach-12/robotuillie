@@ -25,6 +25,14 @@ export interface SearchIngredientInRecipesResponse {
   recipes: recipe[];
 }
 
+export interface ReceptorResponse {
+  _id: string,
+  id: string,
+  taste : string,
+  receptor_name : string
+  uniprot_id : string
+}
+
 export const getAccessToken = async () => {
   const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
