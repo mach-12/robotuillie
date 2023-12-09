@@ -13,11 +13,12 @@ datasource db {
 
 model RecipeDbToken {
     id                  String      @id @default(cuid())
-    access_token        String
+    access_token        String      @db.LongText
     expires_on          DateTime
-    refresh_token       String
+    refresh_token       String      @db.LongText      
     rtoken_expires_on   DateTime
     token_type          String
-    id_token            String
+    id_token            String      @db.LongText
     @@unique([id])
+    @@index([expires_on, rtoken_expires_on])
 }
