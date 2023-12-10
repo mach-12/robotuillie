@@ -4,6 +4,8 @@ import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import {Table, TableHeader, TableColumn, TableBody, TableRow, TableCell} from "@nextui-org/react";
+import {RecipieOfTheDay} from "~/server/api/rdbUtils";
 
 export default function Demo() {
   const [input, setinput] = useState("");
@@ -48,14 +50,25 @@ export default function Demo() {
         <h1 style={{ color: "red" }}>{SearchMutation.error.message}</h1>
       )}
 
-      {SearchMutation.isSuccess &&
-      //@ts-expect-error error
-        SearchMutation.data.map((val, idx) => (
-          <div key={idx}>
-            <h1>Ingredient {val.ingredient}</h1>
-            <h2>Recepies</h2>
-          </div>
-        ))}
+      {SearchMutation.isSuccess && //@ts-expect-error error
+          <Table aria-label="Recipies" className={"max-w-sm "} color="primary">
+            <TableHeader>
+              <TableColumn>Recipie</TableColumn>
+            </TableHeader>
+            <TableBody>
+              {SearchMutation.data
+                  .sort(() => Math.random() - 0.5)
+                  .slice(0, 5)
+                  .map((val, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{val.ingredient}</TableCell>
+                      </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
+      }
+
+
     </>
   );
 }
